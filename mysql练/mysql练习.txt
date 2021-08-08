@@ -1,0 +1,375 @@
+-- 学生表
+drop table if exists student;
+CREATE TABLE `Student`(
+    `s_id` VARCHAR(20),
+    `s_name` VARCHAR(20) NOT NULL DEFAULT '',
+    `s_birth` VARCHAR(20) NOT NULL DEFAULT '',
+    `s_sex` VARCHAR(10) NOT NULL DEFAULT '',
+    PRIMARY KEY(`s_id`)
+);
+-- 课程表
+drop table if exists course;
+CREATE TABLE `Course`(
+    `c_id`  VARCHAR(20),
+    `c_name` VARCHAR(20) NOT NULL DEFAULT '',
+    `t_id` VARCHAR(20) NOT NULL,
+    PRIMARY KEY(`c_id`)
+);
+-- 教师表
+drop table if exists teacher;
+CREATE TABLE `Teacher`(
+    `t_id` VARCHAR(20),
+    `t_name` VARCHAR(20) NOT NULL DEFAULT '',
+    PRIMARY KEY(`t_id`)
+);
+-- 成绩表
+drop table if exists score;
+CREATE TABLE `Score`(
+    `s_id` VARCHAR(20),
+    `c_id`  VARCHAR(20),
+    `s_score` INT(3),
+    PRIMARY KEY(`s_id`,`c_id`)
+);
+
+-- 插入学生表测试数据
+insert into Student values('01' , '赵雷' , '1990-01-01' , '男');
+insert into Student values('02' , '钱电' , '1990-12-21' , '男');
+insert into Student values('03' , '孙风' , '1990-05-20' , '男');
+insert into Student values('04' , '李云' , '1990-08-06' , '男');
+insert into Student values('05' , '周梅' , '1991-12-01' , '女');
+insert into Student values('06' , '吴兰' , '1992-03-01' , '女');
+insert into Student values('07' , '郑竹' , '1989-07-01' , '女');
+insert into Student values('08' , '王菊' , '1990-01-20' , '女');
+-- 课程表测试数据
+insert into Course values('01' , '语文' , '02');
+insert into Course values('02' , '数学' , '01');
+insert into Course values('03' , '英语' , '03');
+
+-- 教师表测试数据
+insert into Teacher values('01' , '张三');
+insert into Teacher values('02' , '李四');
+insert into Teacher values('03' , '王五');
+
+-- 成绩表测试数据
+insert into Score values('01' , '01' , 80);
+insert into Score values('01' , '02' , 90);
+insert into Score values('01' , '03' , 99);
+insert into Score values('02' , '01' , 70);
+insert into Score values('02' , '02' , 60);
+insert into Score values('02' , '03' , 80);
+insert into Score values('03' , '01' , 80);
+insert into Score values('03' , '02' , 80);
+insert into Score values('03' , '03' , 80);
+insert into Score values('04' , '01' , 50);
+insert into Score values('04' , '02' , 30);
+insert into Score values('04' , '03' , 20);
+insert into Score values('05' , '01' , 76);
+insert into Score values('05' , '02' , 87);
+insert into Score values('06' , '01' , 31);
+insert into Score values('06' , '03' , 34);
+insert into Score values('07' , '02' , 89);
+insert into Score values('07' , '03' , 98);
+-- 查询
+select * from student;
+select * from course;
+select * from teacher;
+select * from score;
+-- 1、查询"01"课程比"02"课程成绩高的学生的信息及课程分数  
+
+select s1.*,s2.s_score score1,s3.s_score score2 from student s1,Score s2,Score s3 where s1.s_id=s2.s_id and s1.s_id=s3.s_id and s2.c_id="01" and s3.c_id="02" and s2.s_score>s3.s_score;
+
+-- 2、查询"01"课程比"02"课程成绩低的学生的信息及课程分数
+
+select s1.*,s2.s_score score1,s3.s_score score2 from student s1,Score s2,Score s3 where s1.s_id=s2.s_id and s1.s_id=s3.s_id and s2.c_id="01" and s3.c_id="02" and s2.s_score<s3.s_score;
+
+
+-- 3、查询平均成绩大于等于60分的同学的学生编号和学生姓名和平均成绩
+ 
+select s1.s_id,s1.s_name,avg(s2.s_score) avgScore from Student s1,Score s2 where s1.s_id=s2.s_id group by s2.s_id HAVING avg(s2.s_score) >=60;
+
+
+-- 4、查询平均成绩小于60分的同学的学生编号和学生姓名和平均成绩
+        -- (包括有成绩的和无成绩的)
+ 
+select s1.s_id,s1.s_name,avg(s2.s_score) avgScore from Student s1,Score s2 where s1.s_id=s2.s_id group by s2.s_id HAVING avg(s2.s_score) <= 60;
+
+-- 5、查询所有同学的学生编号、学生姓名、选课总数、所有课程的总成绩
+select student.s_id,student.s_name,count(score.c_id) as '选课总数',sum(score.s_score) as '总成绩' from Student,Score where student.s_id=score.s_id GROUP BY score.s_id;
+
+
+-- 6、查询"李"姓老师的数量 
+select count(*) as '数量' from Teacher where t_name like '李%';
+
+ 
+-- 7、查询学过"张三"老师授课的同学的信息 
+select s1.* from Student s1,Score s2,Course c,Teacher t where s1.s_id=s2.s_id and c.c_id=s2.c_id and t.t_id=c.t_id and t.t_name = "张三";
+
+
+-- 8、查询没学过"张三"老师授课的同学的信息 
+select s1.* from Student s1,Teacher t,Score s2 where s1.s_id=s2.s_id and t.t_id=s2.c_id and s1.s_name not in(select Student.s_name from Student,Teacher,Score  where Student.s_id=Score.s_id and Teacher.t_id=Score.c_id and Teacher.t_name="张三");
+
+
+ 
+-- 9、查询学过编号为"01"并且也学过编号为"02"的课程的同学的信息
+
+select s_id,s_name from student where s_id in(select sc.s_id from (select * from score where c_id='01') as sc join (select * from score where c_id='02') as sc2 on sc.s_id=sc2.s_id);
+
+-- 10、查询学过编号为"01"但是没有学过编号为"02"的课程的同学的信息
+select s1.* from student s1 join score sc on s1.s_id =sc.s_id and sc.c_id='01' where s1.s_id not in(select s1.s_id from student s1 join score sc on s1.s_id = sc.s_id and sc.c_id='02');
+
+
+
+-- 11、查询没有学全所有课程的同学的信息 
+select s1.* from Student s1 where s1.s_id not in(select s2.s_id from Score s2 group by s2.s_id HAVING count(s2.c_id)=(select count(c.c_id) from Course c));
+
+
+ 
+
+-- 12、查询至少有一门课与学号为"01"的同学所学相同的同学的信息 
+select s1.*from Student s1,Score s2 where s1.s_id=s2.s_id and s2.c_id in(select c_id from Score s2 where s2.s_id="01") and not s1.s_id="01" group by s1.s_id;
+
+
+ 
+
+-- 13、查询和"01"号的同学学习的课程完全相同的其他同学的信息 
+select * from Student s1 where s1.s_id in (select s2.s_id from Score s2 where s2.s_id not in (select sc.s_id from Score sc where sc.c_id not in (select c_id from Score where s_id="01")) and s2.s_id <> '01' GROUP BY s2.s_id HAVING count(1) = (select count(1) from Score where s_id='01'));
+ 
+ 
+-- 14、查询没学过"张三"老师讲授的任一门课程的学生姓名 
+select s1.s_name from Student s1,Teacher t,Score s2 where s1.s_id=s2.s_id and t.t_id=s2.c_id and s1.s_name not in(select Student.s_name from Student,Teacher,Score  where Student.s_id=Score.s_id and Teacher.t_id=Score.c_id and Teacher.t_name="张三") GROUP BY s1.s_name;
+
+ 
+
+-- 15、查询两门及其以上不及格课程的同学的学号，姓名及其平均成绩 
+select s1.s_id,s1.s_name,avg(s2.s_score) from Student s1,Score s2 where s1.s_id=s2.s_id and s2.s_score<60 GROUP BY s2.s_id HAVING count(*) >1;
+
+
+-- 16、检索"01"课程分数小于60，按分数降序排列的学生信息
+select s.*,s2.s_score from Student s join score s2 on s.s_id=s2.s_id where s2.c_id='01' and s2.s_score<60;
+  
+
+-- 17、按平均成绩从高到低显示所有学生的所有课程的成绩以及平均成绩
+select s2.s_score as suos,(select avg(score.s_score) as a from score ORDER BY a desc) as avgs  from score s2 order by suos desc;
+
+-- 18.查询各科成绩最高分、最低分和平均分：以如下形式显示：课程ID，课程name，最高分，最低分，平均分，及格率，中等率，优良率，优秀率
+--及格为>=60，中等为：70-80，优良为：80-90，优秀为：>=90
+select distinct c.c_id,c.c_name,B.maxS,B.minS,B.avgS,b.jige from Course c left join (select avg(sc.s_score) as avgS,max(sc.s_score) as  maxS,min(sc.s_score) as minS,c_id, CONCAT(round(sum(case when s_score>=60 then 1 else 0 end)/count(*)*100,2),'%') as jige from Score sc  group by sc.c_id) B  on c.c_id=B.c_id; 
+
+-- 19、按各科成绩进行排序，并显示排名 
+select a.s_name,b.s_score,b.c_id,(select count(c.s_score)+1 from (select c.s_score,count(c.s_score) from Score c group by c.s_score order by c.s_score desc) c where c.s_score > b.s_score) as '排名' from (select s_id,s_name from student) a left join score b on a.s_id=b.s_id where b.s_score>0 order by b.c_id,b.s_score desc; 
+
+-- 20、查询学生的总成绩并进行排名
+select s.s_name,sum(s2.s_score) zongsc from student s left join score s2 on s.s_id=s2.s_id group by s.s_id order by zongsc desc; 
+
+-- 21、查询不同老师所教不同课程平均分从高到低显示 
+select b.t_id,b.t_name,a.c_name,a.c_id,AVG(c.s_score)'avgsc' from course as a inner join teacher as b on a.t_id=b.t_id inner join score as c on c.c_id=a.c_id group by c.c_id  order by avgsc desc;
+ 
+-- 22、查询所有课程的成绩第2名到第3名的学生信息及该课程成绩
+select a.* from (
+select st.*,c.c_id,c.c_name,sc.s_score from student st
+left join score sc on sc.s_id=st.s_id
+inner join course c on c.c_id =sc.c_id and c.c_id="01"
+order by sc.s_score desc LIMIT 1,2 ) a
+union all
+select b.* from (
+select st.*,c.c_id,c.c_name,sc.s_score from student st
+left join score sc on sc.s_id=st.s_id
+inner join course c on c.c_id =sc.c_id and c.c_id="02"
+order by sc.s_score desc limit 1,2) b
+union all
+select c.* from (
+select st.*,c.c_id,c.c_name,sc.s_score from student st
+left join score sc on sc.s_id=st.s_id
+inner join course c on c.c_id =sc.c_id and c.c_id="03"
+order by sc.s_score desc limit 1,2) c
+
+-- 23、统计各科成绩各分数段人数：课程编号,课程名称,[100-85],[85-70],[70-60],[0-60]及所占百分比
+select sc.c_id,co.c_name,SUM(case when sc.s_score<=100 and sc.s_score>=85 then 1 else 0 end)'[100-85]',
+SUM(case when sc.s_score<=85 and sc.s_score>=70 then 1 else 0 end)'[85-70]',
+COUNT(case when sc.s_score<=70 and sc.s_score>=60 then 521 else null end)'[70-60]',
+SUM(case when sc.s_score<=60 then 1 else 0 end)'[0-60]'
+from
+score as sc
+inner join
+course as co on sc.c_id=co.c_id
+group by sc.c_id,co.c_name;
+
+-- 24、查询学生平均成绩及其名次 
+select s_id,avg(s_score) as Savg from score group by s_id order by Savg asc;
+ 
+-- 25、查询各科成绩前三名的记录
+            -- 1.选出b表比a表成绩大的所有组
+            -- 2.选出比当前id成绩大的 小于三个的
+select a.* from (
+ select st.s_id,st.s_name,c.c_id,c.c_name,sc.s_score from student st
+ left join score sc on sc.s_id=st.s_id
+ inner join course c on c.c_id=sc.c_id and c.c_id='01'
+ order by sc.s_score desc limit 0,3) a
+union all 
+select b.* from (
+ select st.s_id,st.s_name,c.c_id,c.c_name,sc.s_score from student st
+ left join score sc on sc.s_id=st.s_id
+ inner join course c on c.c_id=sc.c_id and c.c_id='02'
+ order by sc.s_score desc limit 0,3) b
+union all
+select c.* from (
+ select st.s_id,st.s_name,c.c_id,c.c_name,sc.s_score from student st
+ left join score sc on sc.s_id=st.s_id
+ inner join course c on c.c_id=sc.c_id and c.c_id='03'
+ order by sc.s_score desc limit 0,3) c
+
+-- 26、查询每门课程被选修的学生数 
+select c_id,count(s_id)'人数' from score group by c_id;
+
+-- 27、查询出只有两门课程的全部学生的学号和姓名 
+select st.s_id,st.s_name,count(sc.c_id)'选修课程数两门'from  
+student as st
+inner join
+score as sc on st.s_id=sc.s_id
+group by st.s_id having count(distinct sc.c_id)=2;
+
+-- 28、查询男生、女生人数 
+select s_sex, count(distinct s_id) from student group by s_sex; 
+
+-- 29、查询名字中含有"风"字的学生信息
+
+select * from Student  where s_name like "%风%";
+
+30、查询同名同性学生名单，并统计同名人数 
+   
+select st.*,count(1) from student st group by st.s_name,st.s_sex having count(1)>1;
+
+-- 31、查询1990年出生的学生名单
+
+select * from student where YEAR(s_birth)='1990';
+
+
+-- 32、查询每门课程的平均成绩，结果按平均成绩降序排列，平均成绩相同时，按课程编号升序排列 
+select c_id,avg(s_score) as avgS from score group by c_id order by avgS desc,c_id asc;
+
+-- 33、查询平均成绩大于等于85的所有学生的学号、姓名和平均成绩 
+-- 一
+select st.s_id,st.s_name,AVG(sc.s_score)'mean' from student as st inner join score as sc on st.s_id=sc.s_id group by s_id having mean>=85 ;
+
+-- 二
+
+select s.s_id,s.s_name,b.avgS from student s join (select s_id,avg(s_score) avgS from score group by s_id) b on s.s_id=b.s_id where b.avgS>=85;
+
+-- 34、查询课程名称为"数学"，且分数低于60的学生姓名和分数 
+select s.s_name,s2.s_score from student s,score s2,course c where s.s_id=s2.s_id and c.c_id=s2.c_id and c.c_name="数学" and s2.s_score >=60; 
+
+-- 35、查询所有学生的课程及分数情况；
+
+select st.s_id,st.s_name
+,MAX(case when co.c_name='语文' then sc.s_score else null end) as '语文'
+,MAX(case when co.c_name='数学' then sc.s_score else null end) as '数学'
+,MAX(case when co.c_name='英语' then sc.s_score else null end) as '英语'
+from
+student as st
+join
+score as sc on st.s_id=sc.s_id
+join
+course as co on sc.c_id=co.c_id
+group by st.s_id,st.s_name;
+
+-- 二
+select st.s_id,st.s_name,c.c_name,sc.s_score from student st
+left join score sc on sc.s_id=st.s_id
+left join course c on c.c_id =sc.c_id
+order by st.s_id,c.c_name;
+ 
+ -- 36、查询任何一门课程成绩在70分以上的姓名、课程名称和分数； 
+    
+select s.s_name,c.c_name,s2.s_score from student s,course c,score s2 where s.s_id=s2.s_id and c.c_id=s2.c_id and s2.s_score >=70;
+
+
+-- 37、查询不及格的课程
+ select * from score where s_score <60;
+
+-- 38、查询课程编号为01且课程成绩在80分以上的学生的学号和姓名； 
+select s.s_id,s.s_name from student s join score s2 on s.s_id=s2.s_id where s2.c_id=01 and s2.s_score >=80;
+ 
+-- 39、求每门课程的学生人数 
+select c_id,count(s_id) from score group by c_id;
+ 
+
+-- 40、查询选修"张三"老师所授课程的学生中，成绩最高的学生信息及其成绩
+
+
+        -- 查询老师id   
+  
+        -- 查询最高分（可能有相同分数）
+   
+        -- 查询信息
+
+select st.*,c.c_name,sc.s_score,t.t_name from student st
+inner join score sc on sc.s_id=st.s_id
+inner join course c on c.c_id=sc.c_id 
+inner join teacher t on t.t_id=c.t_id and  t.t_name="张三"
+order by sc.s_score desc limit 0,1 ;
+
+
+-- 41、查询不同课程成绩相同的学生的学生编号、课程编号、学生成绩 
+select st.s_id,st.s_name,sc.c_id,sc.s_score from student st 
+left join score sc on sc.s_id=st.s_id
+left join course c on c.c_id=sc.c_id
+where (select COUNT(1) from student st2 
+left join score sc2 on sc2.s_id=st2.s_id
+left join course c2 on c2.c_id=sc2.c_id
+where sc.s_score=sc2.s_score and c.c_id!=c2.c_id )>1;
+
+
+
+--  42、查询每门功成绩最好的前两名 
+ 
+select sc.c_id,sc.s_score from score sc where (select COUNT(*) from score where sc.c_id = score.c_id and sc.s_score<score.s_score)<2 order by sc.c_id asc,sc.s_score desc;
+
+
+
+-- 43、统计每门课程的学生选修人数（超过5人的课程才统计）。要求输出课程号和选修人数，查询结果按人数降序排列，若人数相同，按课程号升序排列  
+
+select c_id, COUNT( distinct s_id) as num from score group by c_id having num>5 order by num desc,c_id asc;
+     
+
+--  44、查询至少选修两门课程的学生学号 
+
+select s_id,COUNT(distinct c_id) from score group by s_id having COUNT(distinct c_id)>=2;
+
+
+
+-- 45、查询选修了全部课程的学生信息       
+
+select s_id,COUNT(c_id) from score group by s_id having COUNT(c_id)=3;
+
+-- 方法二适应性更强
+select s_id,COUNT(c_id) from score group by s_id having COUNT(c_id)=(select COUNT(c_id) from course);
+
+
+
+-- 46、查询各学生的年龄
+
+    -- 按照出生日期来算，当前月日 < 出生年月的月日则，年龄减一
+
+ select *,(case when convert(int,'1'+substring(convert(varchar(10),s_birth,112),5,8))<convert(int,'1'+substring(convert(varchar(10),getDate(),112)，5，8))then datediff(yy,s_birth,getdate()) else datediff(yy,sage,getdate())-1
+end) s_birth from student;
+
+-- 47、查询本周过生日的学生
+
+select st.* from student st where week(now())=week(date_format(st.s_birth,'%Y%m%d'));
+
+
+48、查询下周过生日的学生
+
+select st.* from student st where week(now())+1=week(date_format(st.s_birth,'%Y%m%d'));
+
+
+-- 49、查询本月过生日的学生
+
+select st.* from student st where month(now())=month(date_format(st.s_birth,'%Y%m%d'));
+
+-- 50、查询下月过生日的学生
+
+select st.* from student st where month(timestampadd(month,1,now()))=month(date_format(st.s_birth,'%Y%m%d'));
+-- 或
+select st.* from student st where (month(now()) + 1) mod 12 = month(date_format(st.s_birth,'%Y%m%d'));
+ 
